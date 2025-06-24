@@ -1,7 +1,8 @@
 'use client';
 
 import { useFormState, useFormStatus } from 'react-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { addRecipe } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
@@ -30,6 +31,7 @@ const initialState = {
 export function RecipeForm() {
   const [state, formAction] = useFormState(addRecipe, initialState);
   const { toast } = useToast();
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (state.message.startsWith('Error:')) {
@@ -40,6 +42,17 @@ export function RecipeForm() {
       });
     }
   }, [state, toast]);
+  
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImageUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <Card>
@@ -89,6 +102,18 @@ export function RecipeForm() {
               <Input id="cookTime" name="cookTime" type="number" placeholder="e.g. 30" required />
               {state?.errors?.cookTime && <p className="text-sm text-destructive">{state.errors.cookTime[0]}</p>}
             </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="image">Recipe Image</Label>
+            <Input id="image" name="image" type="file" accept="image/*" onChange={handleImageChange} required />
+            {imageUrl && (
+              <div className="mt-4 relative w-full aspect-video rounded-md overflow-hidden">
+                <Image src={imageUrl} alt="Recipe preview" fill className="object-cover" />
+              </div>
+            )}
+            <input type="hidden" name="imageUrl" value={imageUrl || ''} />
+            {state?.errors?.imageUrl && <p className="text-sm text-destructive">{state.errors.imageUrl[0]}</p>}
           </div>
           
           <div className="space-y-2">

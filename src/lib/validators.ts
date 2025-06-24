@@ -10,4 +10,5 @@ export const recipeSchema = z.object({
   servings: z.coerce.number().min(1, "Servings must be at least 1."),
   ingredients: z.string().min(10, "Ingredients must be at least 10 characters long."),
   instructions: z.string().min(20, "Instructions must be at least 20 characters long."),
+  imageUrl: z.string().min(1, { message: "Please upload an image." }).startsWith("data:image/", { message: "Please upload a valid image." }),
 });

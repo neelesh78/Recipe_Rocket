@@ -24,6 +24,7 @@ export async function addRecipe(prevState: any, formData: FormData) {
     servings: formData.get('servings'),
     ingredients: formData.get('ingredients'),
     instructions: formData.get('instructions'),
+    imageUrl: formData.get('imageUrl'),
   });
 
   if (!validatedFields.success) {
