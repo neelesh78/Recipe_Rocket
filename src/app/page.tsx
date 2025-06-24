@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { RecipeCard } from '@/components/RecipeCard';
-import { Database, Download, PlusCircle } from 'lucide-react';
+import { Database, Download, PlusCircle, RefreshCw } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,10 @@ export default function Home() {
   useEffect(() => {
     setRecipes(getRecipes());
   }, []);
+
+  const handleRefresh = () => {
+    setRecipes(getRecipes());
+  };
 
   const handleViewDatabase = () => {
     const currentRecipes = getRecipes();
@@ -53,6 +57,9 @@ export default function Home() {
       <div className="flex justify-between items-center mb-8 gap-4">
         <h1 className="text-3xl font-bold font-headline text-foreground">My Recipes</h1>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleRefresh}>
+            <RefreshCw /> Refresh
+          </Button>
           <Button variant="outline" onClick={handleViewDatabase}>
             <Database /> View Database
           </Button>
