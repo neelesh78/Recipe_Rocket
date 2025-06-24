@@ -11,15 +11,15 @@ type RecipeCardProps = {
 };
 
 export function RecipeCard({ recipe, aiHint }: RecipeCardProps) {
-  const totalTime = recipe.prepTime + recipe.cookTime;
+  const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
 
   return (
     <Card className="flex flex-col overflow-hidden transition-transform duration-300 ease-in-out hover:-translate-y-1 hover:shadow-xl">
       <CardHeader className="p-0">
-        <Link href="#" aria-label={`View recipe: ${recipe.name}`}>
+        <Link href="#" aria-label={`View recipe: ${recipe.name || 'Untitled Recipe'}`}>
             <Image
-              src={recipe.imageUrl}
-              alt={recipe.name}
+              src={recipe.imageUrl || 'https://placehold.co/600x400.png'}
+              alt={recipe.name || 'Untitled Recipe'}
               width={600}
               height={400}
               className="w-full h-48 object-cover"
@@ -28,10 +28,10 @@ export function RecipeCard({ recipe, aiHint }: RecipeCardProps) {
         </Link>
       </CardHeader>
       <CardContent className="p-4 flex-grow">
-        <Badge variant="secondary" className="mb-2">{recipe.category}</Badge>
+        {recipe.category && <Badge variant="secondary" className="mb-2">{recipe.category}</Badge>}
         <CardTitle className="font-headline text-xl mb-2 leading-tight">
           <Link href="#" className="hover:text-primary transition-colors">
-            {recipe.name}
+            {recipe.name || 'Untitled Recipe'}
           </Link>
         </CardTitle>
         {recipe.tags && recipe.tags.length > 0 && (
@@ -49,7 +49,7 @@ export function RecipeCard({ recipe, aiHint }: RecipeCardProps) {
         </div>
         <div className="flex items-center gap-2">
           <Users className="h-4 w-4" />
-          <span>{recipe.servings} servings</span>
+          {recipe.servings && <span>{recipe.servings} servings</span>}
         </div>
       </CardFooter>
     </Card>
