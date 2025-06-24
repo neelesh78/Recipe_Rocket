@@ -88,8 +88,8 @@ export default function Home() {
               <div><strong>Database Size:</strong> {(dbStats.size / 1024).toFixed(2)} KB</div>
               <div><strong>Last Modified:</strong> {dbStats.lastModified}</div>
           </div>
-          <div className="flex-1 relative">
-            <ScrollArea className="h-full w-full absolute rounded-md border">
+          <div className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full rounded-md border">
               <pre className="text-sm p-4">
                 <code>{JSON.stringify(mockRecipes, null, 2)}</code>
               </pre>
