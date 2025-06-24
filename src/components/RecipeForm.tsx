@@ -1,138 +1,260 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { z } from 'zod';
 import { addRecipe } from '@/lib/actions';
+import { recipeSchema } from '@/lib/validators';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Loader2, Sparkles } from 'lucide-react';
+import { generateRecipeDetails } from '@/ai/flows/recipe-generation-flow';
 
-function SubmitButton() {
-    const { pending } = useFormStatus();
-    return (
-        <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {pending ? "Submitting..." : "Add Recipe"}
-        </Button>
-    );
-}
-
-const initialState = {
-    message: '',
-    errors: {} as Record<string, string[] | undefined>
-};
+type RecipeFormValues = z.infer<typeof recipeSchema>;
 
 export function RecipeForm() {
-  const [state, formAction] = useFormState(addRecipe, initialState);
   const { toast } = useToast();
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (state.message.startsWith('Error:')) {
-      toast({
-        title: 'Error',
-        description: state.message,
-        variant: 'destructive',
-      });
-    }
-  }, [state, toast]);
-  
+  const form = useForm<RecipeFormValues>({
+    resolver: zodResolver(recipeSchema),
+    defaultValues: {
+      name: '',
+      category: undefined,
+      prepTime: 0,
+      cookTime: 0,
+      servings: 1,
+      ingredients: '',
+      instructions: '',
+      imageUrl: '',
+    },
+  });
+
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImageUrl(reader.result as string);
+        const result = reader.result as string;
+        setImagePreview(result);
+        form.setValue('imageUrl', result, { shouldValidate: true });
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const handleGenerate = async () => {
+    if (!aiPrompt) {
+        toast({ title: 'Prompt is empty', description: 'Please enter a recipe idea.', variant: 'destructive' });
+        return;
+    }
+    setIsGenerating(true);
+    try {
+        const result = await generateRecipeDetails({ description: aiPrompt });
+        form.setValue('name', result.name, { shouldValidate: true });
+        form.setValue('category', result.category, { shouldValidate: true });
+        form.setValue('prepTime', result.prepTime, { shouldValidate: true });
+        form.setValue('cookTime', result.cookTime, { shouldValidate: true });
+        form.setValue('servings', result.servings, { shouldValidate: true });
+        form.setValue('ingredients', result.ingredients, { shouldValidate: true });
+        form.setValue('instructions', result.instructions, { shouldValidate: true });
+        toast({ title: 'Recipe Generated!', description: 'The recipe details have been filled in for you.' });
+    } catch (error) {
+        toast({ title: 'Error', description: 'Failed to generate recipe details.', variant: 'destructive' });
+        console.error(error);
+    }
+    setIsGenerating(false);
+  };
+
+  async function onSubmit(values: RecipeFormValues) {
+    setIsSubmitting(true);
+    const result = await addRecipe(values);
+    if (result?.error) {
+      toast({
+        title: 'Error submitting recipe',
+        description: result.error,
+        variant: 'destructive',
+      });
+      setIsSubmitting(false);
+    }
+    // On success, the action redirects, so no need to handle success case here.
+  }
+
   return (
-    <Card>
-      <form action={formAction}>
-        <CardHeader>
-          <CardTitle className="font-headline">Recipe Details</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="name">Recipe Name</Label>
-            <Input id="name" name="name" placeholder="e.g. Grandma's Apple Pie" required />
-            {state?.errors?.name && <p className="text-sm text-destructive">{state.errors.name[0]}</p>}
-          </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline text-2xl">Generate with AI</CardTitle>
+                <CardDescription>Describe the recipe you have in mind, and let AI do the heavy lifting.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <Textarea
+                    placeholder="e.g., A healthy and quick spicy chicken stir-fry for two people"
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    rows={3}
+                />
+                <Button type="button" onClick={handleGenerate} disabled={isGenerating} className="w-full">
+                    {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                    {isGenerating ? 'Generating...' : 'Generate Recipe'}
+                </Button>
+            </CardContent>
+        </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Select name="category" required>
-                <SelectTrigger id="category">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Breakfast">Breakfast</SelectItem>
-                  <SelectItem value="Lunch">Lunch</SelectItem>
-                  <SelectItem value="Dinner">Dinner</SelectItem>
-                  <SelectItem value="Dessert">Dessert</SelectItem>
-                  <SelectItem value="Snack">Snack</SelectItem>
-                </SelectContent>
-              </Select>
-              {state?.errors?.category && <p className="text-sm text-destructive">{state.errors.category[0]}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="servings">Servings</Label>
-              <Input id="servings" name="servings" type="number" placeholder="e.g. 4" required />
-              {state?.errors?.servings && <p className="text-sm text-destructive">{state.errors.servings[0]}</p>}
-            </div>
-          </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline">Recipe Details</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-6">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Recipe Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. Grandma's Apple Pie" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="prepTime">Prep Time (minutes)</Label>
-              <Input id="prepTime" name="prepTime" type="number" placeholder="e.g. 15" required />
-              {state?.errors?.prepTime && <p className="text-sm text-destructive">{state.errors.prepTime[0]}</p>}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Category</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a category" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="Breakfast">Breakfast</SelectItem>
+                                    <SelectItem value="Lunch">Lunch</SelectItem>
+                                    <SelectItem value="Dinner">Dinner</SelectItem>
+                                    <SelectItem value="Dessert">Dessert</SelectItem>
+                                    <SelectItem value="Snack">Snack</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="servings"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Servings</FormLabel>
+                        <FormControl>
+                            <Input type="number" placeholder="e.g. 4" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="cookTime">Cook Time (minutes)</Label>
-              <Input id="cookTime" name="cookTime" type="number" placeholder="e.g. 30" required />
-              {state?.errors?.cookTime && <p className="text-sm text-destructive">{state.errors.cookTime[0]}</p>}
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="image">Recipe Image</Label>
-            <Input id="image" name="image" type="file" accept="image/*" onChange={handleImageChange} required />
-            {imageUrl && (
-              <div className="mt-4 relative w-full aspect-video rounded-md overflow-hidden">
-                <Image src={imageUrl} alt="Recipe preview" fill className="object-cover" />
-              </div>
-            )}
-            <input type="hidden" name="imageUrl" value={imageUrl || ''} />
-            {state?.errors?.imageUrl && <p className="text-sm text-destructive">{state.errors.imageUrl[0]}</p>}
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="ingredients">Ingredients</Label>
-            <Textarea id="ingredients" name="ingredients" placeholder="List each ingredient on a new line..." rows={6} required />
-            {state?.errors?.ingredients && <p className="text-sm text-destructive">{state.errors.ingredients[0]}</p>}
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="instructions">Instructions</Label>
-            <Textarea id="instructions" name="instructions" placeholder="Step-by-step instructions..." rows={8} required />
-            {state?.errors?.instructions && <p className="text-sm text-destructive">{state.errors.instructions[0]}</p>}
-          </div>
 
-        </CardContent>
-        <CardFooter>
-          <SubmitButton />
-        </CardFooter>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                    control={form.control}
+                    name="prepTime"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Prep Time (minutes)</FormLabel>
+                        <FormControl>
+                            <Input type="number" placeholder="e.g. 15" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="cookTime"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Cook Time (minutes)</FormLabel>
+                        <FormControl>
+                            <Input type="number" placeholder="e.g. 30" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Recipe Image</FormLabel>
+                  <FormControl>
+                    <Input type="file" accept="image/*" onChange={handleImageChange} />
+                  </FormControl>
+                  {imagePreview && (
+                    <div className="mt-4 relative w-full aspect-video rounded-md overflow-hidden">
+                      <Image src={imagePreview} alt="Recipe preview" fill className="object-cover" />
+                    </div>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+                control={form.control}
+                name="ingredients"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Ingredients</FormLabel>
+                    <FormControl>
+                        <Textarea placeholder="List each ingredient on a new line..." rows={6} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+
+            <FormField
+                control={form.control}
+                name="instructions"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Instructions</FormLabel>
+                    <FormControl>
+                        <Textarea placeholder="Step-by-step instructions..." rows={8} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {isSubmitting ? "Submitting..." : "Add Recipe"}
+            </Button>
+          </CardFooter>
+        </Card>
       </form>
-    </Card>
+    </Form>
   );
 }

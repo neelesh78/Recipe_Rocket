@@ -15,22 +15,13 @@ const saveRecipe = async (recipe: z.infer<typeof recipeSchema>) => {
 };
 
 
-export async function addRecipe(prevState: any, formData: FormData) {
-  const validatedFields = recipeSchema.safeParse({
-    name: formData.get('name'),
-    category: formData.get('category'),
-    prepTime: formData.get('prepTime'),
-    cookTime: formData.get('cookTime'),
-    servings: formData.get('servings'),
-    ingredients: formData.get('ingredients'),
-    instructions: formData.get('instructions'),
-    imageUrl: formData.get('imageUrl'),
-  });
+export async function addRecipe(values: z.infer<typeof recipeSchema>) {
+  // Server-side validation
+  const validatedFields = recipeSchema.safeParse(values);
 
   if (!validatedFields.success) {
     return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Error: Please check the form for errors.',
+      error: 'Invalid data provided. Please check the form fields.',
     };
   }
 
@@ -38,7 +29,7 @@ export async function addRecipe(prevState: any, formData: FormData) {
     await saveRecipe(validatedFields.data);
   } catch (error) {
     return {
-      message: 'Database Error: Failed to save recipe.',
+      error: 'Database Error: Failed to save recipe.',
     };
   }
   
