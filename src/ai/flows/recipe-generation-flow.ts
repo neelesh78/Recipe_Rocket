@@ -10,12 +10,12 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
-export const GenerateRecipeDetailsInputSchema = z.object({
+const GenerateRecipeDetailsInputSchema = z.object({
   description: z.string().describe('A description of the recipe to generate.'),
 });
 export type GenerateRecipeDetailsInput = z.infer<typeof GenerateRecipeDetailsInputSchema>;
 
-export const GenerateRecipeDetailsOutputSchema = z.object({
+const GenerateRecipeDetailsOutputSchema = z.object({
   name: z.string().describe("The name of the recipe. Should be catchy and descriptive."),
   category: z.enum(['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack']).describe("The category of the meal."),
   prepTime: z.number().describe("The preparation time in minutes."),
