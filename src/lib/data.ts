@@ -1,0 +1,48 @@
+import type { Recipe } from './types';
+
+export const mockRecipes: Recipe[] = [
+  {
+    id: '1',
+    name: 'Classic Tomato Bruschetta',
+    category: 'Snack',
+    prepTime: 15,
+    cookTime: 5,
+    servings: 4,
+    ingredients: '4 ripe tomatoes, 1/2 red onion, 2 cloves garlic, 1/4 cup fresh basil, 1 tbsp balsamic vinegar, 1 tbsp olive oil, 1 baguette, Salt and pepper to taste',
+    instructions: '1. Dice tomatoes and onion. Mince garlic and chop basil. 2. Combine in a bowl with balsamic vinegar and olive oil. Season with salt and pepper. 3. Slice baguette, brush with olive oil, and toast until golden. 4. Top toasted bread with tomato mixture.',
+    imageUrl: 'https://placehold.co/600x400.png',
+  },
+  {
+    id: '2',
+    name: 'Avocado Toast with Egg',
+    category: 'Breakfast',
+    prepTime: 5,
+    cookTime: 5,
+    servings: 1,
+    ingredients: '1 slice of whole-wheat bread, 1/2 avocado, 1 large egg, Red pepper flakes, Salt and pepper',
+    instructions: '1. Toast bread to your liking. 2. Mash avocado and spread on toast. Season with salt and pepper. 3. Cook an egg (fried or poached). Place on top of avocado toast. 4. Sprinkle with red pepper flakes.',
+    imageUrl: 'https://placehold.co/600x400.png',
+  },
+  {
+    id: '3',
+    name: 'Lemon Herb Roasted Chicken',
+    category: 'Dinner',
+    prepTime: 20,
+    cookTime: 75,
+    servings: 4,
+    ingredients: '1 whole chicken (4 lbs), 1 lemon, 4 cloves garlic, 2 tbsp mixed fresh herbs (rosemary, thyme), 2 tbsp olive oil, Salt and pepper',
+    instructions: '1. Preheat oven to 425°F (220°C). 2. Pat chicken dry. Season generously with salt and pepper. 3. Stuff chicken cavity with halved lemon and garlic cloves. 4. Rub outside with olive oil and herbs. 5. Roast for 1 hour 15 minutes or until juices run clear.',
+    imageUrl: 'https://placehold.co/600x400.png',
+  },
+  {
+    id: '4',
+    name: 'Fudgy Chocolate Brownies',
+    category: 'Dessert',
+    prepTime: 15,
+    cookTime: 30,
+    servings: 16,
+    ingredients: '1/2 cup butter, 1 cup sugar, 2 eggs, 1 tsp vanilla extract, 1/3 cup cocoa powder, 1/2 cup all-purpose flour, 1/4 tsp baking powder, Pinch of salt',
+    instructions: '1. Preheat oven to 350°F (175°C). Grease an 8-inch square pan. 2. Melt butter, then stir in sugar. Whisk in eggs and vanilla. 3. In a separate bowl, combine cocoa, flour, baking powder, and salt. 4. Gradually add dry ingredients to wet ingredients. 5. Pour batter into prepared pan. Bake for 25-30 minutes.',
+    imageUrl: 'https://placehold.co/600x400.png',
+  },
+];
