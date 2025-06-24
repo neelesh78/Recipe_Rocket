@@ -23,6 +23,7 @@ const GenerateRecipeDetailsOutputSchema = z.object({
   servings: z.number().describe("The number of servings the recipe makes."),
   ingredients: z.string().describe("A list of ingredients, each on a new line."),
   instructions: z.string().describe("The step-by-step instructions, with each step on a new line and numbered."),
+  tags: z.array(z.string()).describe("A list of up to 5 relevant tags for the recipe (e.g., 'vegan', 'gluten-free', 'quick')."),
 });
 export type GenerateRecipeDetailsOutput = z.infer<typeof GenerateRecipeDetailsOutputSchema>;
 

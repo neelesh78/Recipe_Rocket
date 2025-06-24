@@ -13,7 +13,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Loader2, Sparkles } from 'lucide-react';
 import { generateRecipeDetails } from '@/ai/flows/recipe-generation-flow';
 
@@ -37,6 +37,7 @@ export function RecipeForm() {
       ingredients: '',
       instructions: '',
       imageUrl: '',
+      tags: '',
     },
   });
 
@@ -68,6 +69,9 @@ export function RecipeForm() {
         form.setValue('servings', result.servings, { shouldValidate: true });
         form.setValue('ingredients', result.ingredients, { shouldValidate: true });
         form.setValue('instructions', result.instructions, { shouldValidate: true });
+        if (result.tags) {
+          form.setValue('tags', result.tags.join(', '), { shouldValidate: true });
+        }
         toast({ title: 'Recipe Generated!', description: 'The recipe details have been filled in for you.' });
     } catch (error) {
         toast({ title: 'Error', description: 'Failed to generate recipe details.', variant: 'destructive' });
@@ -126,6 +130,23 @@ export function RecipeForm() {
                   <FormControl>
                     <Input placeholder="e.g. Grandma's Apple Pie" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tags</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. Vegan, Gluten-Free, Quick" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Enter tags separated by commas.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

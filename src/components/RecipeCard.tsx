@@ -28,12 +28,19 @@ export function RecipeCard({ recipe, aiHint }: RecipeCardProps) {
         </Link>
       </CardHeader>
       <CardContent className="p-4 flex-grow">
-        <Badge variant="accent" className="mb-2">{recipe.category}</Badge>
+        <Badge variant="secondary" className="mb-2">{recipe.category}</Badge>
         <CardTitle className="font-headline text-xl mb-2 leading-tight">
           <Link href="#" className="hover:text-primary transition-colors">
             {recipe.name}
           </Link>
         </CardTitle>
+        {recipe.tags && recipe.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {recipe.tags.map((tag) => (
+              <Badge key={tag} variant="accent">{tag}</Badge>
+            ))}
+          </div>
+        )}
       </CardContent>
       <CardFooter className="p-4 pt-0 text-sm text-muted-foreground flex justify-between border-t mt-auto">
         <div className="flex items-center gap-2">
