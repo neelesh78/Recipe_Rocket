@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
-import { addRecipe } from '@/lib/recipe-store';
+import { addRecipe, updateRecipe } from '@/lib/recipe-store';
 import { recipeSchema } from '@/lib/validators';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -16,16 +16,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Loader2, Sparkles } from 'lucide-react';
 import { generateRecipeDetails } from '@/ai/flows/recipe-generation-flow';
+import type { Recipe } from '@/lib/types';
 
 type RecipeFormValues = z.infer<typeof recipeSchema>;
 
-export function RecipeForm() {
+type RecipeFormProps = {
+  initialData?: Recipe | null;
+}
+
+export function RecipeForm({ initialData = null }: RecipeFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const isUpdateMode = !!initialData;
 
   const form = useForm<RecipeFormValues>({
     resolver: zodResolver(recipeSchema),
@@ -41,6 +48,23 @@ export function RecipeForm() {
       tags: '',
     },
   });
+
+  useEffect(() => {
+    if (initialData) {
+        const values = {
+            ...initialData,
+            tags: initialData.tags?.join(', ') || '',
+        };
+      form.reset(values);
+      setImagePreview(initialData.imageUrl || null);
+    } else {
+        form.reset({
+            name: '', category: '', prepTime: 0, cookTime: 0, servings: 1,
+            ingredients: '', instructions: '', imageUrl: '', tags: '',
+        });
+        setImagePreview(null);
+    }
+  }, [initialData, form]);
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -83,19 +107,25 @@ export function RecipeForm() {
 
   async function onSubmit(values: RecipeFormValues) {
     setIsSubmitting(true);
-    const result = addRecipe(values);
+    
+    const result = isUpdateMode
+      ? updateRecipe(initialData.id, values)
+      : addRecipe(values);
+      
     if (result?.error) {
       toast({
-        title: 'Error submitting recipe',
+        title: `Error ${isUpdateMode ? 'updating' : 'submitting'} recipe`,
         description: result.error,
         variant: 'destructive',
       });
       setIsSubmitting(false);
     } else {
         toast({
-            title: 'Recipe Added!',
-            description: 'Your new recipe has been saved.',
+            title: `Recipe ${isUpdateMode ? 'Updated' : 'Added'}!`,
+            description: `Your recipe has been ${isUpdateMode ? 'updated' : 'saved'}.`,
         });
+        // Dispatch a storage event to notify other components (like the homepage) that data has changed.
+        window.dispatchEvent(new Event("storage"));
         router.push('/');
     }
   }
@@ -103,28 +133,30 @@ export function RecipeForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <Card>
-            <CardHeader>
-                <CardTitle className="font-headline text-2xl">Generate with AI</CardTitle>
-                <CardDescription>Describe the recipe you have in mind, and let AI do the heavy lifting.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <Textarea
-                    placeholder="e.g., A healthy and quick spicy chicken stir-fry for two people"
-                    value={aiPrompt}
-                    onChange={(e) => setAiPrompt(e.target.value)}
-                    rows={3}
-                />
-                <Button type="button" onClick={handleGenerate} disabled={isGenerating} className="w-full">
-                    {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                    {isGenerating ? 'Generating...' : 'Generate Recipe'}
-                </Button>
-            </CardContent>
-        </Card>
+        {!isUpdateMode && (
+             <Card>
+                <CardHeader>
+                    <CardTitle className="font-headline text-2xl">Generate with AI</CardTitle>
+                    <CardDescription>Describe the recipe you have in mind, and let AI do the heavy lifting.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <Textarea
+                        placeholder="e.g., A healthy and quick spicy chicken stir-fry for two people"
+                        value={aiPrompt}
+                        onChange={(e) => setAiPrompt(e.target.value)}
+                        rows={3}
+                    />
+                    <Button type="button" onClick={handleGenerate} disabled={isGenerating} className="w-full">
+                        {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                        {isGenerating ? 'Generating...' : 'Generate Recipe'}
+                    </Button>
+                </CardContent>
+            </Card>
+        )}
 
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Recipe Details</CardTitle>
+            <CardTitle className="font-headline">{isUpdateMode ? 'Edit Recipe Details' : 'Recipe Details'}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-6">
             <FormField
@@ -222,8 +254,13 @@ export function RecipeForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Recipe Image</FormLabel>
-                  <FormControl>
-                    <Input type="file" accept="image/*" onChange={handleImageChange} />
+                   <FormControl>
+                    <Input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleImageChange} 
+                      className="file:text-foreground"
+                    />
                   </FormControl>
                   {imagePreview && (
                     <div className="mt-4 relative w-full aspect-video rounded-md overflow-hidden">
@@ -266,7 +303,7 @@ export function RecipeForm() {
           <CardFooter>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {isSubmitting ? "Submitting..." : "Add Recipe"}
+              {isSubmitting ? (isUpdateMode ? "Saving Changes..." : "Submitting...") : (isUpdateMode ? "Update Recipe" : "Add Recipe")}
             </Button>
           </CardFooter>
         </Card>

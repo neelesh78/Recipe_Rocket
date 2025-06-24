@@ -14,12 +14,20 @@ export const getRecipes = (): Recipe[] => {
   }
   const recipesJson = localStorage.getItem(RECIPES_KEY);
   if (recipesJson) {
-    return JSON.parse(recipesJson);
-  } else {
-    // Seed with mock recipes if it's the first time
-    localStorage.setItem(RECIPES_KEY, JSON.stringify(mockRecipes));
-    return mockRecipes;
+    try {
+        const parsed = JSON.parse(recipesJson);
+        // Basic validation to ensure it's an array
+        if (Array.isArray(parsed)) {
+            return parsed;
+        }
+    } catch (e) {
+        // If parsing fails, fall back to default
+        console.error("Failed to parse recipes from localStorage", e);
+    }
   }
+  // Seed with mock recipes if it's the first time or if data is invalid
+  localStorage.setItem(RECIPES_KEY, JSON.stringify(mockRecipes));
+  return mockRecipes;
 };
 
 export const addRecipe = (values: z.infer<typeof recipeSchema>): { error?: string } => {
@@ -42,8 +50,7 @@ export const addRecipe = (values: z.infer<typeof recipeSchema>): { error?: strin
         id: new Date().getTime().toString(), // Simple unique ID
         ...restOfData,
         tags: tagsArray,
-        // Use the uploaded image if available, otherwise a placeholder
-        imageUrl: values.imageUrl && values.imageUrl.startsWith('data:image') ? values.imageUrl : 'https://placehold.co/600x400.png',
+        imageUrl: values.imageUrl || 'https://placehold.co/600x400.png',
     };
 
     try {
@@ -54,6 +61,48 @@ export const addRecipe = (values: z.infer<typeof recipeSchema>): { error?: strin
     } catch (error) {
         console.error('Failed to save recipe to localStorage', error);
         return { error: 'Failed to save recipe.' };
+    }
+};
+
+export const updateRecipe = (id: string, values: z.infer<typeof recipeSchema>): { error?: string } => {
+    if (typeof window === 'undefined') {
+        return { error: 'This function can only be called on the client.' };
+    }
+
+    const validatedFields = recipeSchema.safeParse(values);
+
+    if (!validatedFields.success) {
+        return { error: 'Invalid data provided.' };
+    }
+    
+    const { tags, ...restOfData } = validatedFields.data;
+    const tagsArray = tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [];
+
+    const updatedRecipeData: Partial<Recipe> = {
+        ...restOfData,
+        tags: tagsArray,
+        imageUrl: values.imageUrl,
+    };
+
+    try {
+        const currentRecipes = getRecipes();
+        const recipeIndex = currentRecipes.findIndex(r => r.id === id);
+
+        if (recipeIndex === -1) {
+            return { error: 'Recipe not found for updating.' };
+        }
+        
+        // Merge existing data with new data
+        const updatedRecipe = { ...currentRecipes[recipeIndex], ...updatedRecipeData };
+
+        const updatedRecipes = [...currentRecipes];
+        updatedRecipes[recipeIndex] = updatedRecipe;
+        
+        localStorage.setItem(RECIPES_KEY, JSON.stringify(updatedRecipes));
+        return {};
+    } catch (error) {
+        console.error('Failed to update recipe in localStorage', error);
+        return { error: 'Failed to update recipe.' };
     }
 };
 

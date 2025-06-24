@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { RecipeCard } from '@/components/RecipeCard';
-import { Database, Download, PlusCircle, RefreshCw } from 'lucide-react';
+import { Database, Download, PlusCircle, FileEdit } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -26,9 +26,17 @@ export default function Home() {
     setRecipes(getRecipes());
   }, []);
 
-  const handleRefresh = () => {
+  // Function to be called to refresh recipes from child components or other events
+  const refreshRecipes = () => {
     setRecipes(getRecipes());
   };
+  
+  useEffect(() => {
+    window.addEventListener('storage', refreshRecipes);
+    return () => {
+      window.removeEventListener('storage', refreshRecipes)
+    }
+  }, [])
 
   const handleViewDatabase = () => {
     const currentRecipes = getRecipes();
@@ -54,11 +62,13 @@ export default function Home() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8 gap-4">
+      <div className="flex justify-between items-center mb-8 gap-4 flex-wrap">
         <h1 className="text-3xl font-bold font-headline text-foreground">My Recipes</h1>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleRefresh}>
-            <RefreshCw /> Refresh
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button asChild variant="outline">
+            <Link href="/update-recipe">
+              <FileEdit /> Update Recipe
+            </Link>
           </Button>
           <Button variant="outline" onClick={handleViewDatabase}>
             <Database /> View Database
