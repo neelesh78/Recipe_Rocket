@@ -16,7 +16,7 @@ export function RecipeCard({ recipe, aiHint }: RecipeCardProps) {
   return (
     <Card className="flex flex-col overflow-hidden transition-transform duration-300 ease-in-out hover:-translate-y-1 hover:shadow-xl">
       <CardHeader className="p-0">
-        <Link href="#" aria-label={`View recipe: ${recipe.name || 'Untitled Recipe'}`}>
+        <Link href={`/recipe/${recipe.id}`} aria-label={`View recipe: ${recipe.name || 'Untitled Recipe'}`}>
             <Image
               src={recipe.imageUrl || 'https://placehold.co/600x400.png'}
               alt={recipe.name || 'Untitled Recipe'}
@@ -30,7 +30,7 @@ export function RecipeCard({ recipe, aiHint }: RecipeCardProps) {
       <CardContent className="p-4 flex-grow">
         {recipe.category && <Badge variant="secondary" className="mb-2">{recipe.category}</Badge>}
         <CardTitle className="font-headline text-xl mb-2 leading-tight">
-          <Link href="#" className="hover:text-primary transition-colors">
+          <Link href={`/recipe/${recipe.id}`} className="hover:text-primary transition-colors">
             {recipe.name || 'Untitled Recipe'}
           </Link>
         </CardTitle>
