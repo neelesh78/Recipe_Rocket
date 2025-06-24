@@ -1,7 +1,7 @@
 export type Recipe = {
   id: string;
   name?: string;
-  category?: 'Breakfast' | 'Lunch' | 'Dinner' | 'Dessert' | 'Snack';
+  category?: string;
   prepTime?: number; // in minutes
   cookTime?: number; // in minutes
   servings?: number;

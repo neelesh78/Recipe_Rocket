@@ -45,11 +45,11 @@ export function RecipeCard({ recipe, aiHint }: RecipeCardProps) {
       <CardFooter className="p-4 pt-0 text-sm text-muted-foreground flex justify-between border-t mt-auto">
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4" />
-          <span>{totalTime} min</span>
+          <span>{totalTime > 0 ? `${totalTime} min` : 'N/A'}</span>
         </div>
         <div className="flex items-center gap-2">
           <Users className="h-4 w-4" />
-          {recipe.servings && <span>{recipe.servings} servings</span>}
+          {recipe.servings ? <span>{recipe.servings} servings</span> : <span>N/A</span>}
         </div>
       </CardFooter>
     </Card>

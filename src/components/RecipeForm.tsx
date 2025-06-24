@@ -2,17 +2,17 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
-import { addRecipe } from '@/lib/actions';
+import { addRecipe } from '@/lib/recipe-store';
 import { recipeSchema } from '@/lib/validators';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Loader2, Sparkles } from 'lucide-react';
 import { generateRecipeDetails } from '@/ai/flows/recipe-generation-flow';
@@ -21,6 +21,7 @@ type RecipeFormValues = z.infer<typeof recipeSchema>;
 
 export function RecipeForm() {
   const { toast } = useToast();
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
@@ -30,7 +31,7 @@ export function RecipeForm() {
     resolver: zodResolver(recipeSchema),
     defaultValues: {
       name: '',
-      category: undefined,
+      category: '',
       prepTime: 0,
       cookTime: 0,
       servings: 1,
@@ -82,7 +83,7 @@ export function RecipeForm() {
 
   async function onSubmit(values: RecipeFormValues) {
     setIsSubmitting(true);
-    const result = await addRecipe(values);
+    const result = addRecipe(values);
     if (result?.error) {
       toast({
         title: 'Error submitting recipe',
@@ -90,8 +91,13 @@ export function RecipeForm() {
         variant: 'destructive',
       });
       setIsSubmitting(false);
+    } else {
+        toast({
+            title: 'Recipe Added!',
+            description: 'Your new recipe has been saved.',
+        });
+        router.push('/');
     }
-    // On success, the action redirects, so no need to handle success case here.
   }
 
   return (
@@ -159,20 +165,9 @@ export function RecipeForm() {
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Category</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a category" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    <SelectItem value="Breakfast">Breakfast</SelectItem>
-                                    <SelectItem value="Lunch">Lunch</SelectItem>
-                                    <SelectItem value="Dinner">Dinner</SelectItem>
-                                    <SelectItem value="Dessert">Dessert</SelectItem>
-                                    <SelectItem value="Snack">Snack</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <FormControl>
+                                <Input placeholder="e.g. Dinner" {...field} />
+                            </FormControl>
                             <FormMessage />
                         </FormItem>
                     )}

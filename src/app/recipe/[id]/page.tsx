@@ -1,21 +1,41 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { mockRecipes } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Users, ChefHat, ArrowLeft } from 'lucide-react';
+import { getRecipeById } from '@/lib/recipe-store';
+import type { Recipe } from '@/lib/types';
 
 export default function RecipeDetailPage({ params }: { params: { id: string } }) {
-  const recipe = mockRecipes.find((r) => r.id === params.id);
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchedRecipe = getRecipeById(params.id);
+    if (fetchedRecipe) {
+      setRecipe(fetchedRecipe);
+    }
+    setLoading(false);
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto max-w-4xl px-4 py-8">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   if (!recipe) {
     notFound();
   }
 
   const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
-
-  const ingredientsList = recipe.ingredients?.split(',').map(item => item.trim()) || [];
-  const instructionsList = recipe.instructions?.split(/\d+\./).filter(item => item.trim()).map(item => item.trim()) || [];
+  const ingredientsList = recipe.ingredients?.split('\n').map(item => item.trim()).filter(Boolean) || [];
+  const instructionsList = recipe.instructions?.split('\n').filter(item => item.trim()).map(item => item.replace(/^\d+\.\s*/, '').trim()) || [];
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">

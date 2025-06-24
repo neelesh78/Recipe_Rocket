@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { mockRecipes } from '@/lib/data';
 import { RecipeCard } from '@/components/RecipeCard';
 import { Database, Download, PlusCircle } from 'lucide-react';
 import {
@@ -14,32 +13,30 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import type { Recipe } from '@/lib/types';
+import { getRecipes, getDbStats } from '@/lib/recipe-store';
 
 export default function Home() {
-  const recipeHints: Record<string, string> = {
-    '1': 'tomato basil',
-    '2': 'avocado egg',
-    '3': 'roast chicken',
-    '4': 'chocolate brownies',
-  };
-
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isViewDbOpen, setIsViewDbOpen] = useState(false);
   const [dbStats, setDbStats] = useState({ total: 0, size: 0, lastModified: '' });
+  const [dbContent, setDbContent] = useState('');
+
+  useEffect(() => {
+    setRecipes(getRecipes());
+  }, []);
 
   const handleViewDatabase = () => {
-    const dataString = JSON.stringify(mockRecipes, null, 2);
-    const dataSize = new Blob([dataString]).size;
-    setDbStats({
-      total: mockRecipes.length,
-      size: dataSize,
-      lastModified: new Date().toLocaleString(),
-    });
+    const currentRecipes = getRecipes();
+    setDbContent(JSON.stringify(currentRecipes, null, 2));
+    setDbStats(getDbStats());
     setIsViewDbOpen(true);
   };
 
   const handleExportDatabase = () => {
+    const currentRecipes = getRecipes();
     const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
-      JSON.stringify(mockRecipes, null, 2)
+      JSON.stringify(currentRecipes, null, 2)
     )}`;
     const link = document.createElement('a');
     const date = new Date().toISOString().split('T')[0];
@@ -70,8 +67,8 @@ export default function Home() {
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {mockRecipes.map((recipe) => (
-          <RecipeCard key={recipe.id} recipe={recipe} aiHint={recipeHints[recipe.id]} />
+        {recipes.map((recipe) => (
+          <RecipeCard key={recipe.id} recipe={recipe} />
         ))}
       </div>
 
@@ -91,7 +88,7 @@ export default function Home() {
           <div className="flex-1 overflow-hidden">
             <ScrollArea className="h-full rounded-md border">
               <pre className="text-sm p-4">
-                <code>{JSON.stringify(mockRecipes, null, 2)}</code>
+                <code>{dbContent}</code>
               </pre>
             </ScrollArea>
           </div>

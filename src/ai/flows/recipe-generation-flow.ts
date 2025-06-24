@@ -17,7 +17,7 @@ export type GenerateRecipeDetailsInput = z.infer<typeof GenerateRecipeDetailsInp
 
 const GenerateRecipeDetailsOutputSchema = z.object({
   name: z.string().describe("The name of the recipe. Should be catchy and descriptive."),
-  category: z.enum(['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack']).describe("The category of the meal."),
+  category: z.string().describe("The category of the meal (e.g., Breakfast, Lunch, Dinner, Dessert)."),
   prepTime: z.number().describe("The preparation time in minutes."),
   cookTime: z.number().describe("The cooking time in minutes."),
   servings: z.number().describe("The number of servings the recipe makes."),
