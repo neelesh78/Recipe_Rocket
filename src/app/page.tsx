@@ -83,11 +83,25 @@ export default function Home() {
           </Button>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {recipes.map((recipe) => (
-          <RecipeCard key={recipe.id} recipe={recipe} />
-        ))}
-      </div>
+      
+      {recipes.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {recipes.map((recipe) => (
+            <RecipeCard key={recipe.id} recipe={recipe} />
+          ))}
+        </div>
+      ) : (
+         <div className="text-center py-16 border-2 border-dashed rounded-lg">
+            <h2 className="text-2xl font-semibold text-muted-foreground">Your Recipe Book is Empty!</h2>
+            <p className="mt-2 text-muted-foreground">Let's add your first culinary masterpiece.</p>
+            <Button asChild className="mt-6">
+                <Link href="/add-recipe">
+                    <PlusCircle /> Add a Recipe
+                </Link>
+            </Button>
+        </div>
+      )}
+
 
       <Dialog open={isViewDbOpen} onOpenChange={setIsViewDbOpen}>
         <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
