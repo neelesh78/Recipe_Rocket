@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { MealPlanner } from '@/components/MealPlanner';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -44,6 +45,10 @@ export default function MealPlannerPage() {
     setMealPlan(newPlan);
     saveMealPlan(newPlan);
   };
+  
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handlePlanChange({ ...mealPlan, title: e.target.value });
+  };
 
   const handleGenerate = async () => {
     if (!aiPrompt) {
@@ -59,14 +64,12 @@ export default function MealPlannerPage() {
         const recipesForPrompt = recipes.map(({ id, name, tags }) => ({ id, name: name || 'Untitled Recipe', tags }));
         const result = await generateMealPlan({ description: aiPrompt, recipes: recipesForPrompt as any });
 
-        const newPlan = getEmptyMealPlan();
-        for (const day in result) {
-          if (day in newPlan) {
-            Object.assign(newPlan[day as keyof MealPlan], result[day as keyof GenerateMealPlanOutput]);
-          }
-        }
+        const newPlan: MealPlan = {
+          title: mealPlan.title, // Keep existing title
+          ...result
+        };
         
-        handlePlanChange(newPlan as MealPlan);
+        handlePlanChange(newPlan);
         toast({ title: 'Meal Plan Generated!', description: 'Your weekly meal plan has been created.' });
     } catch (error) {
         toast({ title: 'Error', description: 'Failed to generate meal plan.', variant: 'destructive' });
@@ -103,8 +106,13 @@ export default function MealPlannerPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8 gap-4 flex-wrap">
-        <h1 className="text-3xl font-bold font-headline text-foreground">Meal Planner</h1>
+      <div className="flex justify-between items-start mb-8 gap-4 flex-wrap">
+        <Input
+          value={mealPlan.title || ''}
+          onChange={handleTitleChange}
+          placeholder="My Weekly Meal Plan"
+          className="text-3xl font-bold font-headline text-foreground bg-transparent border-0 border-b-2 border-transparent focus:border-input focus:ring-0 p-0 h-auto flex-grow"
+        />
         <div className="flex items-center gap-2 flex-wrap">
           <Button variant="outline" onClick={handleViewDatabase}>
             <Database /> View Database

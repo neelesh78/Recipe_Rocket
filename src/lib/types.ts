@@ -25,5 +25,12 @@ export type DailyPlan = {
 };
 
 export type MealPlan = {
-  [key in DayOfWeek]: DailyPlan;
+  title: string;
+  monday: DailyPlan;
+  tuesday: DailyPlan;
+  wednesday: DailyPlan;
+  thursday: DailyPlan;
+  friday: DailyPlan;
+  saturday: DailyPlan;
+  sunday: DailyPlan;
 };

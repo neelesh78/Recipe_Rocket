@@ -7,10 +7,16 @@ const MEAL_PLAN_KEY = 'mealPlan';
 const DAYS_OF_WEEK: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
 export const getEmptyMealPlan = (): MealPlan => {
-    return DAYS_OF_WEEK.reduce((acc, day) => {
-        acc[day] = { breakfast: null, lunch: null, dinner: null };
-        return acc;
-    }, {} as MealPlan);
+    return {
+        title: 'My Weekly Meal Plan',
+        monday: { breakfast: null, lunch: null, dinner: null },
+        tuesday: { breakfast: null, lunch: null, dinner: null },
+        wednesday: { breakfast: null, lunch: null, dinner: null },
+        thursday: { breakfast: null, lunch: null, dinner: null },
+        friday: { breakfast: null, lunch: null, dinner: null },
+        saturday: { breakfast: null, lunch: null, dinner: null },
+        sunday: { breakfast: null, lunch: null, dinner: null },
+    };
 };
 
 
@@ -23,7 +29,7 @@ export const getMealPlan = (): MealPlan => {
   if (mealPlanJson) {
     try {
         const parsed = JSON.parse(mealPlanJson);
-        if (typeof parsed === 'object' && parsed !== null && DAYS_OF_WEEK.every(day => day in parsed)) {
+        if (typeof parsed === 'object' && parsed !== null && 'title' in parsed && DAYS_OF_WEEK.every(day => day in parsed)) {
             return parsed;
         }
     } catch (e) {
@@ -61,9 +67,12 @@ export const getMealPlanDbStats = (): { total: number; size: number; lastModifie
     let totalMeals = 0;
     try {
         const mealPlan: MealPlan = JSON.parse(dataString);
-        totalMeals = Object.values(mealPlan).reduce((count, dayPlan) => {
-            const daily = dayPlan as DailyPlan;
-            return count + Object.values(daily).filter(meal => meal !== null).length;
+        totalMeals = DAYS_OF_WEEK.reduce((count, day) => {
+            const dayPlan = mealPlan[day];
+            if (dayPlan) {
+              return count + Object.values(dayPlan).filter(meal => meal !== null).length;
+            }
+            return count;
         }, 0);
     } catch (e) {
         // ignore parsing errors
