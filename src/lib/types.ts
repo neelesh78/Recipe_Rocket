@@ -10,3 +10,20 @@ export type Recipe = {
   imageUrl?: string;
   tags?: string[];
 };
+
+export type PlannedMeal = {
+  recipeId: string;
+  recipeName: string;
+  recipeImageUrl?: string;
+};
+
+export type MealType = 'breakfast' | 'lunch' | 'dinner';
+export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+
+export type DailyPlan = {
+  [key in MealType]: PlannedMeal | null;
+};
+
+export type MealPlan = {
+  [key in DayOfWeek]: DailyPlan;
+};

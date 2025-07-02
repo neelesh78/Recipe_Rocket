@@ -20,6 +20,12 @@ export default function Header() {
             >
               Recipes
             </Link>
+            <Link
+              href="/meal-planner"
+              className="transition-colors hover:text-foreground/80 text-foreground/60"
+            >
+              Meal Planner
+            </Link>
           </nav>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
