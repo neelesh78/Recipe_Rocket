@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import type { Recipe, MealPlan, PlannedMeal, DayOfWeek, MealType } from '@/lib/types';
 
 const DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner'];
+const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 
 type MealPlannerProps = {
   recipes: Recipe[];

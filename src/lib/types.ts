@@ -17,12 +17,15 @@ export type PlannedMeal = {
   recipeImageUrl?: string;
 };
 
-export type MealType = 'breakfast' | 'lunch' | 'dinner';
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 
-export type DailyPlan = {
-  [key in MealType]: PlannedMeal | null;
-};
+export interface DailyPlan {
+  breakfast: PlannedMeal | null;
+  lunch: PlannedMeal | null;
+  dinner: PlannedMeal | null;
+  snack: PlannedMeal | null;
+}
 
 export type MealPlan = {
   title: string;

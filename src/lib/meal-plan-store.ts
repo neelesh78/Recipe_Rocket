@@ -7,15 +7,21 @@ const MEAL_PLAN_KEY = 'mealPlan';
 const DAYS_OF_WEEK: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
 export const getEmptyMealPlan = (): MealPlan => {
+    const emptyDay: DailyPlan = {
+        breakfast: null,
+        lunch: null,
+        dinner: null,
+        snack: null,
+    };
     return {
         title: 'My Weekly Meal Plan',
-        monday: { breakfast: null, lunch: null, dinner: null },
-        tuesday: { breakfast: null, lunch: null, dinner: null },
-        wednesday: { breakfast: null, lunch: null, dinner: null },
-        thursday: { breakfast: null, lunch: null, dinner: null },
-        friday: { breakfast: null, lunch: null, dinner: null },
-        saturday: { breakfast: null, lunch: null, dinner: null },
-        sunday: { breakfast: null, lunch: null, dinner: null },
+        monday: { ...emptyDay },
+        tuesday: { ...emptyDay },
+        wednesday: { ...emptyDay },
+        thursday: { ...emptyDay },
+        friday: { ...emptyDay },
+        saturday: { ...emptyDay },
+        sunday: { ...emptyDay },
     };
 };
 
@@ -30,6 +36,12 @@ export const getMealPlan = (): MealPlan => {
     try {
         const parsed = JSON.parse(mealPlanJson);
         if (typeof parsed === 'object' && parsed !== null && 'title' in parsed && DAYS_OF_WEEK.every(day => day in parsed)) {
+            // Fill in missing meal types for backward compatibility
+            DAYS_OF_WEEK.forEach(day => {
+                if (!('snack' in parsed[day])) {
+                    parsed[day].snack = null;
+                }
+            });
             return parsed;
         }
     } catch (e) {

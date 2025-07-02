@@ -9,7 +9,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import type { DayOfWeek } from '@/lib/types';
+import type { DayOfWeek, MealType } from '@/lib/types';
 
 // The input passed to the flow function
 const FlowInputSchema = z.object({
@@ -34,6 +34,7 @@ const DailyPlanSchema = z.object({
     breakfast: PlannedMealSchema.nullable(),
     lunch: PlannedMealSchema.nullable(),
     dinner: PlannedMealSchema.nullable(),
+    snack: PlannedMealSchema.nullable(),
 });
 
 const GenerateMealPlanOutputSchema = z.object({
@@ -62,14 +63,21 @@ const PromptInputSchema = z.object({
 // A simplified schema for the AI model to output, to avoid complexity errors.
 const AiOutputMealSchema = z.string().nullable().describe("The ID of a recipe from the provided list, or null if no suitable recipe is found for this meal slot.");
 
+const AiDailyPlanOutputSchema = z.object({
+    breakfast: AiOutputMealSchema,
+    lunch: AiOutputMealSchema,
+    dinner: AiOutputMealSchema,
+    snack: AiOutputMealSchema,
+});
+
 const AiOutputSchema = z.object({
-  monday: z.object({ breakfast: AiOutputMealSchema, lunch: AiOutputMealSchema, dinner: AiOutputMealSchema }),
-  tuesday: z.object({ breakfast: AiOutputMealSchema, lunch: AiOutputMealSchema, dinner: AiOutputMealSchema }),
-  wednesday: z.object({ breakfast: AiOutputMealSchema, lunch: AiOutputMealSchema, dinner: AiOutputMealSchema }),
-  thursday: z.object({ breakfast: AiOutputMealSchema, lunch: AiOutputMealSchema, dinner: AiOutputMealSchema }),
-  friday: z.object({ breakfast: AiOutputMealSchema, lunch: AiOutputMealSchema, dinner: AiOutputMealSchema }),
-  saturday: z.object({ breakfast: AiOutputMealSchema, lunch: AiOutputMealSchema, dinner: AiOutputMealSchema }),
-  sunday: z.object({ breakfast: AiOutputMealSchema, lunch: AiOutputMealSchema, dinner: AiOutputMealSchema }),
+  monday: AiDailyPlanOutputSchema,
+  tuesday: AiDailyPlanOutputSchema,
+  wednesday: AiDailyPlanOutputSchema,
+  thursday: AiDailyPlanOutputSchema,
+  friday: AiDailyPlanOutputSchema,
+  saturday: AiDailyPlanOutputSchema,
+  sunday: AiDailyPlanOutputSchema,
 });
 
 
@@ -78,7 +86,7 @@ const prompt = ai.definePrompt({
   input: { schema: PromptInputSchema },
   output: { schema: AiOutputSchema }, // Use the simplified schema for the AI
   prompt: `You are an expert meal planner. A user wants you to create a weekly meal plan for them based on their preferences and a list of available recipes.
-Fill out a plan for each day of the week (Monday to Sunday) for breakfast, lunch, and dinner.
+Fill out a plan for each day of the week (Monday to Sunday) for breakfast, lunch, dinner, and snack.
 Use the provided recipes. Only use recipes from this list and return only their ID. If no suitable recipe is found for a slot, you must return null.
 
 The user's preferences are: {{{description}}}
@@ -111,20 +119,22 @@ const generateMealPlanFlow = ai.defineFlow(
     }
 
     // Transform the AI output (recipe IDs) into the full GenerateMealPlanOutput format.
+    const emptyDay = { breakfast: null, lunch: null, dinner: null, snack: null };
     const finalOutput: GenerateMealPlanOutput = {
-      monday: { breakfast: null, lunch: null, dinner: null },
-      tuesday: { breakfast: null, lunch: null, dinner: null },
-      wednesday: { breakfast: null, lunch: null, dinner: null },
-      thursday: { breakfast: null, lunch: null, dinner: null },
-      friday: { breakfast: null, lunch: null, dinner: null },
-      saturday: { breakfast: null, lunch: null, dinner: null },
-      sunday: { breakfast: null, lunch: null, dinner: null },
+      monday: { ...emptyDay },
+      tuesday: { ...emptyDay },
+      wednesday: { ...emptyDay },
+      thursday: { ...emptyDay },
+      friday: { ...emptyDay },
+      saturday: { ...emptyDay },
+      sunday: { ...emptyDay },
     };
     
     const days: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const mealTypes: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 
     for (const day of days) {
-        for (const mealType of ['breakfast', 'lunch', 'dinner'] as const) {
+        for (const mealType of mealTypes) {
             const recipeId = aiOutput[day]?.[mealType];
             if (recipeId) {
                 const recipe = recipeMap.get(recipeId);
