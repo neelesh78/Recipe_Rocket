@@ -61,7 +61,7 @@ export default function MealPlannerPage() {
     }
     setIsGenerating(true);
     try {
-        const recipesForPrompt = recipes.map(({ id, name, tags }) => ({ id, name: name || 'Untitled Recipe', tags }));
+        const recipesForPrompt = recipes.map(({ id, name, tags, imageUrl }) => ({ id, name: name || 'Untitled Recipe', tags, imageUrl }));
         const result = await generateMealPlan({ description: aiPrompt, recipes: recipesForPrompt as any });
 
         const newPlan: MealPlan = {
