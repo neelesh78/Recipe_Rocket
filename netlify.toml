@@ -1,19 +1,19 @@
 # netlify.toml
 
-[build]
-  command = "npm run build"
-  publish = ".next"  # This is handled by the Next.js Netlify plugin
+# [build]
+#   command = "npm run build"
+#   publish = ".next"  # This is handled by the Next.js Netlify plugin
 
-[build.environment]
-  NODE_VERSION = "18"
-  NEXT_PRIVATE_TARGET = "server"
+# [build.environment]
+#   NODE_VERSION = "18"
+#   NEXT_PRIVATE_TARGET = "server"
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
+# [[plugins]]
+#   package = "@netlify/plugin-nextjs"
 
 # Optional: Redirect all unmatched routes (SSR/Dynamic Routing)
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/index.tsx"
   status = 200
   force = true
